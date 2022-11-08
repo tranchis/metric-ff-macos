@@ -91,8 +91,10 @@ static char *serrmsg[] = {
 };
 
 
-/* void opserr( int errno, char *par ); */
-
+void opserr(int, char *);
+int ops_pddllex(void);
+int ops_pddlerror(char *);
+int ops_pddlparse(void);
 
 static int sact_err;
 static char *sact_err_par = NULL;
@@ -368,7 +370,7 @@ NAME
 { 
   if ( !supported( $4 ) ) {
     opserr( NOT_SUPPORTED, $4 );
-    yyerror();
+    yyerror("");
   }
 }
 require_key_star  CLOSE_PAREN
@@ -383,7 +385,7 @@ NAME
 { 
   if ( !supported( $1 ) ) {
     opserr( NOT_SUPPORTED, $1 );
-    yyerror();
+    yyerror("");
   }
 }
 require_key_star
@@ -994,11 +996,11 @@ VARIABLE  typed_list_variable        /* a list element (gets type from next one)
  * call	bison -pops -bscan-ops scan-ops.y
  */
 
-void opserr( int errno, char *par )
+void opserr( int errnum, char *par )
 
 {
 
-/*   sact_err = errno; */
+/*   sact_err = errnum; */
 
 /*   if ( sact_err_par ) { */
 /*     free(sact_err_par); */

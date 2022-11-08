@@ -98,8 +98,10 @@ static char * serrmsg[] = {
 };
 
 
-/* void fcterr( int errno, char *par ); */
-
+void fcterr(int, char *);
+int fct_pddllex(void);
+int fct_pddlerror(char *);
+int fct_pddlparse(void);
 
 static int sact_err;
 static char *sact_err_par = NULL;
@@ -218,7 +220,7 @@ OPEN_PAREN  BDOMAIN_TOK  NAME  CLOSE_PAREN
 { 
   if ( SAME != strcmp($3, gdomain_name) ) {
     fcterr( BADDOMAIN, NULL );
-    yyerror();
+    yyerror("");
   }
 }
 ;
@@ -875,9 +877,9 @@ NAME  name_star
 /* 
  * call	bison -pfct -bscan-fct scan-fct.y
  */
-void fcterr( int errno, char *par ) {
+void fcterr( int errnum, char *par ) {
 
-/*   sact_err = errno; */
+/*   sact_err = errnum; */
 
 /*   if ( sact_err_par ) { */
 /*     free( sact_err_par ); */

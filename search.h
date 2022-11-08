@@ -70,8 +70,7 @@ void add_to_bfs_space( State *S, int op, BfsNode *father );
 void do_weighted_Astar( void );
 void add_to_weighted_Astar_space( State *S, int op, BfsNode *father );
 
-
-
+void do_Astar_epsilon(void);
 void do_Astar_epsilon_repairing( void );
 BfsNode *Astar_epsilon_select_first( void );
 void add_to_Astar_epsilon_space( State *S, int op, BfsNode *father );
