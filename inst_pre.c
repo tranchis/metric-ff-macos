@@ -1,5 +1,8 @@
 
+
 /*********************************************************************
+ * (C) Copyright 2002 Albert Ludwigs University Freiburg
+ *     Institute of Computer Science
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -16,6 +19,30 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  * 
  *********************************************************************/
+
+
+
+
+/*
+ * THIS SOURCE CODE IS SUPPLIED  ``AS IS'' WITHOUT WARRANTY OF ANY KIND, 
+ * AND ITS AUTHOR AND THE JOURNAL OF ARTIFICIAL INTELLIGENCE RESEARCH 
+ * (JAIR) AND JAIR'S PUBLISHERS AND DISTRIBUTORS, DISCLAIM ANY AND ALL 
+ * WARRANTIES, INCLUDING BUT NOT LIMITED TO ANY IMPLIED
+ * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE, AND
+ * ANY WARRANTIES OR NON INFRINGEMENT.  THE USER ASSUMES ALL LIABILITY AND
+ * RESPONSIBILITY FOR USE OF THIS SOURCE CODE, AND NEITHER THE AUTHOR NOR
+ * JAIR, NOR JAIR'S PUBLISHERS AND DISTRIBUTORS, WILL BE LIABLE FOR 
+ * DAMAGES OF ANY KIND RESULTING FROM ITS USE.  Without limiting the 
+ * generality of the foregoing, neither the author, nor JAIR, nor JAIR's
+ * publishers and distributors, warrant that the Source Code will be 
+ * error-free, will operate without interruption, or will meet the needs 
+ * of the user.
+ */
+
+
+
+
+
 
 
 
@@ -105,7 +132,6 @@ void encode_domain_in_integers( void )
   int i,j;
 
   collect_all_strings();
-  create_member_nrs();
 
   if ( gcmd_line.display_info == 103 ) {
     printf("\nconstant table:");
@@ -167,30 +193,6 @@ void encode_domain_in_integers( void )
     printf("\n\nfirst step metric is: (normalized to minimize)\n");
     print_ExpNode( gmetric );
     fflush( stdout );
-  }
-
-}
-
-
-
-void create_member_nrs( void )
-
-{
-
-  int i, j, num;
-
-  for ( i = 0; i < MAX_CONSTANTS; i++ ) {
-    for ( j = 0; j < MAX_TYPES; j++ ) {
-      gmember_nr[i][j] = -1;
-    }
-  }
-
-  for ( i = 0; i < gnum_types; i++ ) {
-    num = 0;
-    for ( j = 0; j < gtype_size[i]; j++ ) {
-      gmember_nr[gtype_consts[i][j]][i] = num;
-      num++;
-    }
   }
 
 }
@@ -300,9 +302,7 @@ void collect_all_strings( void )
       }
       gpredicates_args_type[gnum_predicates][ar++] = type_num;
     }
-    garity[gnum_predicates] = ar;
-    gaxiom_added[gnum_predicates] = FALSE;
-    gnum_predicates++;
+    garity[gnum_predicates++] = ar;
   }
 
 
@@ -437,10 +437,8 @@ void create_integer_representation( void )
   PlOperator *o;
   Operator *tmp;
   FactList *ff;
-  int type_num, i, j, sum;
+  int type_num, i, sum;
   ExpNode *t;
-  Effect *e;
-  Literal *l;
 
   if ( gorig_initial_facts ) {
     sum = 0;
@@ -457,34 +455,6 @@ void create_integer_representation( void )
 	  printf("\nequality in initial state! check input files.\n\n");
 	  exit( 1 );
 	}
-
-	/* duplicate check!!
-	 */
-	for ( i = 0; i < gnum_full_initial; i++ ) {
-	  if ( gfull_initial[i].predicate != gfull_initial[gnum_full_initial].predicate ) {
-	    /* predicate different --> this ini fact is not a duplicate!
-	     */
-	    continue;
-	  }
-	  for ( j = 0; j < garity[gfull_initial[i].predicate]; j++ ) {
-	    if ( gfull_initial[i].args[j] != gfull_initial[gnum_full_initial].args[j] ) {
-	      /* arg different --> this ini fact is not a duplicate!
-	       */
-	      break;
-	    }
-	  }
-	  if ( j == garity[gfull_initial[i].predicate] ) {
-	    /* found a duplicate!
-	     */
-	    break;
-	  }
-	}
-	if ( i < gnum_full_initial ) {
-	  /* simply skip the second occurence...
-	   */
-	  continue;
-	}
-
 	gnum_full_initial++;
       } else {
 	/* a fluent value assignment
@@ -514,27 +484,21 @@ void create_integer_representation( void )
   ggoal = make_Wff( gorig_goal_facts, 0 );
 
   if ( gparse_metric != NULL ) {
-    /* no need to throw costs away, even if we're not explicitly asked to 
-     * minimize them
-     */
-    if ( 0 && !gcost_minimizing ) {
+    if ( !gcmd_line.optimize ) {
       if ( gcmd_line.display_info ) {
 	printf("\n\nno optimization required. skipping criterion.\n\n");
       }
     } else {
       gmetric = make_ExpNode( gparse_metric, 0 );
       if ( strcmp( gparse_optimization, "MINIMIZE" ) != SAME &&
-	   strcmp( gparse_optimization, "minimize" ) != SAME &&
-	   strcmp( gparse_optimization, "MAXIMIZE" ) != SAME &&
-	   strcmp( gparse_optimization, "maximize" ) != SAME ) {
+	   strcmp( gparse_optimization, "MAXIMIZE" ) != SAME ) {
 	if ( gcmd_line.display_info ) {
 	  printf("\n\nunknown optimization method %s. check input files\n\n", 
 		 gparse_optimization);
 	}
 	exit( 1 );
       }
-      if ( strcmp( gparse_optimization, "MAXIMIZE" ) == SAME ||
-	   strcmp( gparse_optimization, "maximize" ) == SAME ) {
+      if ( strcmp( gparse_optimization, "MAXIMIZE" ) == SAME ) {
 	t = new_ExpNode( MINUS );
 	t->son = gmetric;
 	gmetric = t;
@@ -544,7 +508,6 @@ void create_integer_representation( void )
 
   for ( o = gloaded_ops; o; o = o->next ) {
     tmp = new_Operator( o->name, o->number_of_real_params );
-    tmp->axiom = o->axiom;
 
     for ( ff = o->params; ff; ff = ff->next ) {
       if ( (type_num = position_in_types_table( ff->item->next->item )) == -1 ) {
@@ -614,31 +577,6 @@ void create_integer_representation( void )
      * almost no memory consumption anyway.
      */
     free_PlOperator( gloaded_ops );
-  }
-
-  /* establish gaxiom_added markers.
-   * ascertain that derived predicates do not appear in effects!!
-   */
-  for ( i = 0; i < gnum_operators; i++ ) {
-    for ( e = goperators[i]->effects; e; e = e->next ) {
-      for ( l = e->effects; l; l = l->next ) {
-	if ( goperators[i]->axiom ) {
-	  gaxiom_added[l->fact.predicate] = TRUE;
-	} 
-      }
-    }
-  }
-  for ( i = 0; i < gnum_operators; i++ ) {
-    for ( e = goperators[i]->effects; e; e = e->next ) {
-      for ( l = e->effects; l; l = l->next ) {
-	if ( !goperators[i]->axiom &&
-	     gaxiom_added[l->fact.predicate] ) {
-	  printf("\nA derived predicate appears in an operator effect.");
-	  printf("\nSorry, this is not allowed. Bailing out.\n\n");
-	  exit( 1 );
-	} 
-      }
-    }
   }
 
 }
@@ -2877,16 +2815,6 @@ Bool translate_one_negative_cond( WffNode *w )
     exit( 1 );
   }
   p = w->son->fact->predicate;
-  /* safety check: we disallow negative conds on derived preds!!
-   */
-  if ( gaxiom_added[p]) {
-    printf("\nA derived predicate appears negated in the negation normal form of a derivation rule condition, an operator precondition, or the goal.");
-    printf("\nSorry, this version of FF does not allow any of this. Bailing out.\n\n");
-    exit( 1 );
-  } else {
-    printf("\ntranslating negated cond for predicate %s", gpredicates[p]);
-  }
-
   gpredicates[gnum_predicates] = new_Token( strlen( gpredicates[p] ) + 5 );
   sprintf( gpredicates[gnum_predicates], "NOT-%s", gpredicates[p] );
   garity[gnum_predicates] = garity[p];
@@ -3712,7 +3640,7 @@ void ANDs_below_ORs_in_wff( WffNode **w )
     (*w)->connective = OR;
     tmp = (*w)->sons;
     (*w)->sons = lhitting_sets;
-    if ( 0 ) free_WffNode( tmp );
+    free_WffNode( tmp );
     merge_next_step_ANDs_and_ORs_in_wff( w );
     break;
   case OR:

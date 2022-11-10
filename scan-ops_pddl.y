@@ -91,7 +91,7 @@ static char *serrmsg[] = {
 };
 
 
-void opserr(int, char *);
+void opserr( int errno, char *par );
 int ops_pddllex(void);
 int ops_pddlerror(char *);
 int ops_pddlparse(void);
@@ -1000,7 +1000,7 @@ void opserr( int errnum, char *par )
 
 {
 
-/*   sact_err = errnum; */
+/*   sact_err = errno; */
 
 /*   if ( sact_err_par ) { */
 /*     free(sact_err_par); */

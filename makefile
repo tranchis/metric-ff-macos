@@ -1,5 +1,7 @@
 #!/bin/sh
 #
+# Makefile for FF v 1.0
+#
 
 
 ####### FLAGS
@@ -9,7 +11,7 @@ ADDONS	=
 
 CC      = gcc
 
-CFLAGS	= -O6 -ansi $(TYPE) $(ADDONS) -g
+CFLAGS	= -O6 -Wall -g -ansi $(TYPE) $(ADDONS) 
 # -g -pg
 
 LIBS    = -lm

@@ -98,7 +98,7 @@ static char * serrmsg[] = {
 };
 
 
-void fcterr(int, char *);
+void fcterr( int errnum, char *par );
 int fct_pddllex(void);
 int fct_pddlerror(char *);
 int fct_pddlparse(void);
@@ -879,7 +879,7 @@ NAME  name_star
  */
 void fcterr( int errnum, char *par ) {
 
-/*   sact_err = errnum; */
+/*   sact_err = errno; */
 
 /*   if ( sact_err_par ) { */
 /*     free( sact_err_par ); */
